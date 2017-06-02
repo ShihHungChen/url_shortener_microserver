@@ -5,17 +5,21 @@ var container = new Array(0)
 
 function InsertURLMap(url){
   var found_url = false
+  var Data;
   
   for(var index = 0; index < container.length; ++index){
     if(container[index].value === url){
       found_url = true
+      Data = {key : index, value : url}
     }
   }
   
   if(!found_url){
-    var Data = {key : container.length, value : url}
+    Data = {key : container.length, value : url}
     container[container.length] = Data
   }
+  
+  return Data;
   
   // Debug Info
   /*console.log('Print container data : ')
@@ -24,6 +28,15 @@ function InsertURLMap(url){
   })
   console.log('Print end\n')*/
   
+}
+
+function FindIndexFromContainer(index){
+  for(var i = 0; i < container.length; ++i){
+    if(container[i].key === index){
+      return container[i].value
+    }
+  }
+  return false
 }
 
 app.get('/', function (req, res) {
@@ -49,17 +62,23 @@ Will redirect to:\n\
     https://www.google.com/')
 })
 
-app.get('/new/:URL',function(req, res){
+app.get('/new/*',function(req, res){
   res.writeHead(200, {'Content-Type' : 'application/json'})
-  InsertURLMap(req.params.URL)
-  console.log('Add ' + req.params.URL + ' into container')
-  res.end('Insert Data')
-  // implement : print the json data
+  var insert_object = InsertURLMap(req.url.slice(5))
+  var short_url = 'https://url-shortener-microserver-shihung.c9users.io/' + insert_object.key;
+  res.end(JSON.stringify({'original_url' : req.url.slice(5), 'short_url' :  short_url }))
 })
 
-app.use('/:Index', function(req, res, next){
-  // implement : find the index form container and redrect into 'value' website
-  next()
+app.get('/:Index', function(req, res){
+  var data = FindIndexFromContainer(+req.params.Index)
+  if( data === false ){
+    res.writeHead(404, {'Content-Type' : 'text/plain'})
+    res.end('Error : This short url doesn\'t direct to any website')
+  }else{
+    res.writeHead(200, {'Content-Type' : 'text/plain'})
+    res.end('Will re-direct to new website later, website : ' + data.toString())
+  }
+  
 })
 
 app.get('*',function(req, res){
