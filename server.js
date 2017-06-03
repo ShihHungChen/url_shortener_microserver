@@ -1,6 +1,7 @@
 const express = require('express')
-var urlContainer = require('./container')
 const app = express()
+
+var urlContainer = require('./container')
 
 app.get('/', function (req, res) {
   res.writeHead(200,{'Content-Type' : 'text/plain'})
