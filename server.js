@@ -1,43 +1,6 @@
 const express = require('express')
+var urlContainer = require('./container')
 const app = express()
-
-var container = new Array(0)
-
-function InsertURLMap(url){
-  var found_url = false
-  var Data;
-  
-  for(var index = 0; index < container.length; ++index){
-    if(container[index].value === url){
-      found_url = true
-      Data = {key : index, value : url}
-    }
-  }
-  
-  if(!found_url){
-    Data = {key : container.length, value : url}
-    container[container.length] = Data
-  }
-  
-  return Data;
-  
-  // Debug Info
-  /*console.log('Print container data : ')
-  container.forEach(function(element, index, arr){
-    console.log(element)
-  })
-  console.log('Print end\n')*/
-  
-}
-
-function FindIndexFromContainer(index){
-  for(var i = 0; i < container.length; ++i){
-    if(container[i].key === index){
-      return container[i].value
-    }
-  }
-  return false
-}
 
 app.get('/', function (req, res) {
   res.writeHead(200,{'Content-Type' : 'text/plain'})
@@ -64,21 +27,19 @@ Will redirect to:\n\
 
 app.get('/new/*',function(req, res){
   res.writeHead(200, {'Content-Type' : 'application/json'})
-  var insert_object = InsertURLMap(req.url.slice(5))
+  var insert_object = urlContainer.InsertURLIntoContainer(req.url.slice(5))
   var short_url = 'https://url-shortener-microserver-shihung.c9users.io/' + insert_object.key;
   res.end(JSON.stringify({'original_url' : req.url.slice(5), 'short_url' :  short_url }))
 })
 
 app.get('/:Index', function(req, res){
-  var data = FindIndexFromContainer(+req.params.Index)
-  if( data === false ){
+  var query_result = urlContainer.QueryFromContainer(+req.params.Index)
+  if( query_result === false ){
     res.writeHead(404, {'Content-Type' : 'text/plain'})
-    res.end('Error : This short url doesn\'t direct to any website')
+    res.end('Error : This short url doesn\'t exists')
   }else{
-    res.writeHead(200, {'Content-Type' : 'text/plain'})
-    res.end('Will re-direct to new website later, website : ' + data.toString())
+    res.redirect(query_result)
   }
-  
 })
 
 app.get('*',function(req, res){
